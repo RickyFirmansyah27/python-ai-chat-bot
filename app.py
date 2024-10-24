@@ -31,9 +31,10 @@ def main():
 
     memory = ConversationBufferWindowMemory(k=conversational_memory_length, memory_key="chat_history", return_messages=True)
 
-    user_question = st.text_input("Ask a question:")
+    # Change from st.text_input to st.text_area
+    user_question = st.text_area("Ask a question:", height=100)
 
-    if st.button("Changes Response"):
+    if st.button("Clear"):
         st.session_state.chat_history = []
         st.session_state.user_question = ""
 
@@ -51,29 +52,30 @@ def main():
         model_name=model
     )
 
-    if user_question:
-        if system_prompt:
-            prompt = ChatPromptTemplate.from_messages(
-                [
-                    SystemMessage(content=system_prompt),
-                    MessagesPlaceholder(variable_name="chat_history"),
-                    HumanMessagePromptTemplate.from_template("{human_input}"),
-                ]
-            )
+    if st.button("Submit"):
+        if user_question:
+            if system_prompt:
+                prompt = ChatPromptTemplate.from_messages(
+                    [
+                        SystemMessage(content=system_prompt),
+                        MessagesPlaceholder(variable_name="chat_history"),
+                        HumanMessagePromptTemplate.from_template("{human_input}"),
+                    ]
+                )
 
-            conversation = LLMChain(
-                llm=groq_chat,
-                prompt=prompt,
-                verbose=True,
-                memory=memory,
-            )
-            
-            response = conversation.predict(human_input=user_question)
-            message = {'human': user_question, 'AI': response}
-            st.session_state.chat_history.append(message)
-            st.write("Chatbot:", response)
-        else:
-            st.warning("Please enter a system prompt.")
+                conversation = LLMChain(
+                    llm=groq_chat,
+                    prompt=prompt,
+                    verbose=True,
+                    memory=memory,
+                )
+                
+                response = conversation.predict(human_input=user_question)
+                message = {'human': user_question, 'AI': response}
+                st.session_state.chat_history.append(message)
+                st.write("Chatbot:", response)
+            else:
+                st.warning("Please enter a system prompt.")
 
 if __name__ == "__main__":
     main()
