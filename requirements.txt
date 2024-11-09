@@ -2,4 +2,3 @@ streamlit
 langchain
 langchain-groq
 pdfplumber
-dotenv
