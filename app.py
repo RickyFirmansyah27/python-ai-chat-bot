@@ -12,13 +12,6 @@ from langchain_core.messages import SystemMessage
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import magic  # untuk deteksi tipe file
-
-def detect_file_type(file_content):
-    """Deteksi tipe konten file yang lebih spesifik"""
-    mime = magic.Magic(mime=True)
-    file_type = mime.from_buffer(file_content)
-    return file_type
 
 def get_quick_actions(file_type, file_content):
     """Return quick actions berdasarkan tipe file dan konten"""
