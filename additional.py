@@ -1,7 +1,6 @@
 import streamlit as st
 import pdfplumber
 import os
-from dotenv import load_dotenv
 from langchain.chains import LLMChain
 from langchain_core.prompts import (
     ChatPromptTemplate,
@@ -12,13 +11,6 @@ from langchain_core.messages import SystemMessage
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 from langchain_groq import ChatGroq
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import magic  # untuk deteksi tipe file
-
-def detect_file_type(file_content):
-    """Deteksi tipe konten file yang lebih spesifik"""
-    mime = magic.Magic(mime=True)
-    file_type = mime.from_buffer(file_content)
-    return file_type
 
 def get_quick_actions(file_type, file_content):
     """Return quick actions berdasarkan tipe file dan konten"""
@@ -165,7 +157,6 @@ def chatConversation(user_question, system_prompt, groq_chat, memory, chunk_inde
     return response
 
 def main():
-    load_dotenv()
     st.set_page_config(page_title="Chat Interface", layout="centered")
 
     st.markdown("""

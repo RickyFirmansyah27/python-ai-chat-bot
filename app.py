@@ -20,25 +20,21 @@ def get_quick_actions(file_type, file_content):
         "keywords": "Ekstrak kata kunci penting"
     }
     
-    # Deteksi konten berbasis coding
     code_indicators = [
         "def ", "class ", "import ", "function", "var ", "const ",
-        "<html", "<?php", "#include", "package ", "using namespace"
+        "<html", "<?php",
     ]
     
-    # Deteksi konten berbasis data
     data_indicators = [
         "SELECT ", "INSERT ", "CREATE TABLE", "DROP ", "ALTER ",
         "DataFrame", "pandas", "numpy", "matplotlib"
     ]
     
-    # Deteksi konten akademis
     academic_indicators = [
         "Abstract", "Introduction", "Methodology", "Conclusion",
         "References", "et al.", "Fig.", "Table "
     ]
     
-    # Cek indikator dalam konten
     is_code = any(indicator in file_content for indicator in code_indicators)
     is_data = any(indicator in file_content for indicator in data_indicators)
     is_academic = any(indicator in file_content for indicator in academic_indicators)
@@ -73,7 +69,6 @@ def get_quick_actions(file_type, file_content):
             "citation_check": "Periksa format sitasi"
         })
     
-    # Jika tidak ada indikator spesifik, gunakan aksi umum untuk dokumen
     if not (is_code or is_data or is_academic):
         specific_actions.update({
             "extract_topics": "Ekstrak topik-topik utama",
@@ -83,15 +78,6 @@ def get_quick_actions(file_type, file_content):
         })
     
     return {**common_actions, **specific_actions}
-
-def chunk_text(text, chunk_size=4000):
-    """Split text into smaller chunks"""
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=200,
-        length_function=len,
-    )
-    return text_splitter.split_text(text)
 
 def read_pdf(file):
     try:
@@ -111,29 +97,42 @@ def read_text_file(file):
         st.error(f"Error reading text file: {str(e)}")
         return None
 
+def chunk_text(text, chunk_size=10000):
+    if len(text) < 20000:
+        return [text]
+
+    if len(text) % chunk_size == 0:
+        return [text[:chunk_size], text[chunk_size:]]
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=200,
+        length_function=len,
+    )
+    chunks = text_splitter.split_text(text)
+    return [chunks[0], ' '.join(chunks[1:])]
+
 def process_file_content(file_content, max_length=4000):
     """Process and truncate file content to prevent context length issues"""
     if not file_content:
         return None
     
-    # Split content into chunks
     chunks = chunk_text(file_content)
     
-    # Store all chunks in session state
     st.session_state.file_chunks = chunks
     
-    # Return a summary of the file content
-    return f"Dokumen berisi {len(chunks)} bagian dengan total {len(file_content)} karakter."
+    if len(file_content) < 20000:
+        return f"Dokumen berisi 1 bagian dengan total {len(file_content)} karakter."
+    else:
+        return f"Dokumen berisi {len(chunks)} bagian dengan total {len(file_content)} karakter."
 
 def chatConversation(user_question, system_prompt, groq_chat, memory, chunk_index=None):
-    # Prepare the context based on the current chunk
     if chunk_index is not None and 'file_chunks' in st.session_state:
         current_chunk = st.session_state.file_chunks[chunk_index]
         context = f"\n\nBerikut adalah bagian {chunk_index + 1} dari dokumen:\n{current_chunk}"
     else:
         context = ""
 
-    # Combine system prompt with context
     full_prompt = f"{system_prompt}{context}"
 
     prompt = ChatPromptTemplate.from_messages(
@@ -164,13 +163,12 @@ def main():
         .stTextArea textarea { color: white; }
         .stButton button { background-color: transparent; border: 1px solid white; color: white; }
         .response-area { border-radius: 4px; padding: 1rem; min-height: 200px; }
-        .file-content { background-color: #f0f2f6; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+        .file-content { background-color
         .quick-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
         .quick-action-button { flex: 1; min-width: 200px; }
         </style>
     """, unsafe_allow_html=True)
 
-    # Initialize session state
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
     if 'file_chunks' not in st.session_state:
@@ -208,7 +206,7 @@ def main():
             1, 10, value=5
         )
         
-        # File uploader section
+
         uploaded_file = st.file_uploader("Upload a file (PDF or TXT)", type=["pdf", "txt"])
         if uploaded_file is not None:
             if uploaded_file.type == "application/pdf":
@@ -221,7 +219,7 @@ def main():
                 st.success("File berhasil diunggah!")
                 st.info(file_info)
                 
-                # Update quick actions based on file content
+        
                 st.session_state.quick_actions = get_quick_actions(uploaded_file.type, file_content)
                 
                 if st.session_state.file_chunks:
@@ -236,7 +234,7 @@ def main():
                     with st.expander("Lihat Bagian Dokumen Saat Ini"):
                         st.markdown(f"```\n{st.session_state.file_chunks[chunk_index][:500]}...\n```")
                 
-                # Quick action buttons
+        
                 if st.session_state.quick_actions:
                     st.subheader("Quick Actions")
                     cols = st.columns(2)
@@ -248,7 +246,6 @@ def main():
 
     st.title("DOCUMENT CHAT ASSISTANT")
     
-    # Main chat interface
     user_question = st.text_area(
         "Masukkan pertanyaan Anda:", 
         value=st.session_state.get("user_question", ""), 
@@ -256,7 +253,6 @@ def main():
         placeholder="Contoh: Tolong rangkum bagian ini, atau tanyakan hal spesifik tentang isi dokumen..."
     )
 
-    # Control buttons
     col1, col2, col3 = st.columns([2, 3, 1])
     with col1:
         if st.button("Clear Chat", use_container_width=True):
@@ -267,10 +263,9 @@ def main():
     with col3:
         submit_button = st.button("Submit", use_container_width=True)
 
-    # Chat processing
     response_placeholder = st.empty()
     memory = ConversationBufferWindowMemory(
-        k=conversational_memory_length,
+        k=int(conversational_memory_length),
         memory_key="chat_history",
         return_messages=True
     )
@@ -295,9 +290,8 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-    # Display chat history
     if st.session_state.chat_history:
-        st.markdown("### Riwayat Percakapan")
+        st.markdown
         for message in st.session_state.chat_history:
             st.markdown(f"**User:** {message['human']}")
             st.markdown(f"**Assistant:** {message['AI']}")
