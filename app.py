@@ -244,7 +244,7 @@ def main():
                             if st.button(action_desc, key=f"action_{action_key}"):
                                 st.session_state.user_question = action_desc
 
-    st.title("DOCUMENT CHAT ASSISTANT")
+    st.title("Python Chat Assistant")
     
     user_question = st.text_area(
         "Masukkan pertanyaan Anda:", 
@@ -291,10 +291,21 @@ def main():
             """, unsafe_allow_html=True)
 
     if st.session_state.chat_history:
-        st.markdown
-        for message in st.session_state.chat_history:
-            st.markdown(f"**User:** {message['human']}")
-            st.markdown(f"**Assistant:** {message['AI']}")
+            st.markdown("### Chat History") 
+            for message in st.session_state.chat_history:
+                with st.container():
+                    # Pesan user dengan styling
+                    st.markdown(f"""
+                        <div style='background-color: #262730; padding: 10px; border-radius: 5px; margin-bottom: 10px'>
+                            <strong>User:</strong> {message['human']}
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    st.markdown(f"""
+                        <div style='background-color: #0E1117; padding: 10px; border-radius: 5px; margin-bottom: 20px'>
+                            <strong>Assistant:</strong> {message['AI']}
+                        </div>
+                    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
