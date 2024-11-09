@@ -157,7 +157,6 @@ def chatConversation(user_question, system_prompt, groq_chat, memory, chunk_inde
     return response
 
 def main():
-    load_dotenv()
     st.set_page_config(page_title="Chat Interface", layout="centered")
 
     st.markdown("""
