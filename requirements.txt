@@ -1,3 +1,6 @@
 streamlit
 langchain
 langchain-groq
+python-magic-bin
+pdfplumber
+dotenv
